@@ -9,7 +9,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.AssetManager;
 import android.util.Log;
-import io.flutter.FlutterInjector;
 import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.embedding.engine.dart.DartExecutor;
 import io.flutter.embedding.engine.dart.DartExecutor.DartCallback;
@@ -22,6 +21,8 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry.PluginRegistrantCallback;
 import io.flutter.view.FlutterCallbackInformation;
+import io.flutter.view.FlutterMain;
+
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -42,7 +43,7 @@ public class FlutterBackgroundExecutor implements MethodCallHandler {
 
   private FlutterEngine backgroundFlutterEngine;
 
-  private final AtomicBoolean isCallbackDispatcherReady = new AtomicBoolean(false);
+  private AtomicBoolean isCallbackDispatcherReady = new AtomicBoolean(false);
 
   /**
    * Sets the {@code PluginRegistrantCallback} used to register plugins with the newly spawned
@@ -152,11 +153,10 @@ public class FlutterBackgroundExecutor implements MethodCallHandler {
     }
 
     Log.i(TAG, "Starting AlarmService...");
-    if (!isRunning()) {
+    String appBundlePath = FlutterMain.findAppBundlePath(context);
+    AssetManager assets = context.getAssets();
+    if (appBundlePath != null && !isRunning()) {
       backgroundFlutterEngine = new FlutterEngine(context);
-
-      String appBundlePath = FlutterInjector.instance().flutterLoader().findAppBundlePath();
-      AssetManager assets = context.getAssets();
 
       // We need to create an instance of `FlutterEngine` before looking up the
       // callback. If we don't, the callback cache won't be initialized and the
